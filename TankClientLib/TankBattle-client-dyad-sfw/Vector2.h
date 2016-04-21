@@ -84,6 +84,7 @@ inline Vector2 normal(const Vector2 &a)
 
 
 inline bool operator<(const Vector2 &a, const Vector2 &b) { return a.x < b.x && a.y < b.y; }
+inline bool operator>(const Vector2 &a, const Vector2 &b) { return a.x > b.x && a.y > b.y; }
 
 inline Vector2 min(const Vector2 &a, const Vector2 &b) { return{ std::fminf(a.x, b.x), std::fminf(a.y, b.y) }; }
 inline Vector2 max(const Vector2 &a, const Vector2 &b) { return{ std::fmaxf(a.x, b.x), std::fminf(a.y, b.y) }; }

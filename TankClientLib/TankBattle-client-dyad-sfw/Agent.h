@@ -46,7 +46,7 @@ class Agent
 
 				if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) > .01)
 				{
-					turret = FIRE;
+					//turret = FIRE;
 				}
 	}
 	void Fire()
@@ -60,10 +60,17 @@ class Agent
 	{
 		Vector2 dir = normal(Vector2(current->position[0], current->position[2]) - Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
 		float dis = distance(Vector2(current->position[0], current->position[2]), Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
-		std::cout << dis << "\n";
+		std::cout << "x" << dir[0] << " z" << dir[2] <<"\n";
 		if (dis > 13)
 		{
-			//movement shit
+			if (Vector2(current->forward[0], current->forward[2]) < dir)
+			{
+				tbc.tankMove = tankNet::TankMovementOptions::RIGHT;
+			}
+			if (Vector2(current->forward[0], current->forward[2]) > dir)
+			{
+				tbc.tankMove = tankNet::TankMovementOptions::LEFT;
+			}
 		}
 	}
 public:
