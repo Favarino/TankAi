@@ -31,10 +31,6 @@ class Agent
 
 		Vector2 dir = normal(Vector2(current->position[0], current->position[2]) - Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
 
-		for (aimTarget = 0; aimTarget < 3; ++aimTarget)
-		{
-			if (current->tacticoolData[aimTarget].inSight)
-			{
 				float boop = dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2]));
 
 				//std::cout << boop << "\n";
@@ -52,8 +48,6 @@ class Agent
 				{
 					turret = FIRE;
 				}
-			}
-		}
 	}
 	void Fire()
 	{
@@ -64,15 +58,12 @@ class Agent
 	
 	void Chase()
 	{
+		Vector2 dir = normal(Vector2(current->position[0], current->position[2]) - Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
 		float dis = distance(Vector2(current->position[0], current->position[2]), Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
 		std::cout << dis << "\n";
 		if (dis > 13)
 		{
-			tbc.tankMove = tankNet::TankMovementOptions::FWRD;
-		}
-		else
-		{
-			tbc.tankMove = tankNet::TankMovementOptions::HALT;
+			//movement shit
 		}
 	}
 public:
