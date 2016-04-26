@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cassert>
 #include <cfloat>
-
+#define RADTODEG 57.2958f
 struct Vector2
 {
 	union
@@ -17,13 +17,18 @@ struct Vector2
 	float magnitude() const { return sqrtf(x*x + y*y); }
 
 	float angle() const { return atan2f(y, x); }
-
+	static Vector2 random();
 	float &operator[](unsigned idx) { return v[idx]; }
 	float  operator[](unsigned idx) const { return v[idx]; }
-
+	static Vector2 fromXZ(float *vec3) { return Vector2{ vec3[0],vec3[2] }; }
 	static Vector2 fromAngle(float a)
 	{
 		return{ cosf(a), sinf(a) };
+	}
+
+	float getAngleBetween(Vector2 a)
+	{
+		return atan2(a.y - y, a.x - x) * RADTODEG;
 	}
 };
 
@@ -52,10 +57,9 @@ inline Vector2 operator/(const Vector2 &lhs, float rhs)
 {
 	return Vector2(lhs.x / rhs, lhs.y / rhs);
 }
-inline Vector2 operator*(const Vector2 &lhs, float rhs)
-{
-	return Vector2(lhs.x * rhs, lhs.y * rhs);
-}
+inline Vector2 operator*(const Vector2 &a, const Vector2 &b) { return Vector2{ a.x * b.x, a.y * b.y }; }
+inline Vector2 operator*(const Vector2 &a, float b) { return Vector2{ a.x * b  , a.y * b }; }
+inline Vector2 operator*(float b, const Vector2 &a) { return Vector2{ a.x * b  , a.y * b }; }
 // Dot production tells us how much one vector extends
 // in the direction of another vector
 inline float dot(const Vector2 &lhs, const Vector2 &rhs)
@@ -108,4 +112,13 @@ inline Vector2 snap(const Vector2 &val, const Vector2 &lower, const Vector2 &upp
 inline float distance(const Vector2 &a, const Vector2 &b)
 {
 	return sqrtf((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
+}
+
+// there is no 2D cross product, this is actually the perpendicular dot product.
+// negative values mean b is to the "left" of a and positive values mean b is to the "right" of a.
+inline float cross(const Vector2 &a, const Vector2 &b) { return dot(a, perp(b)); }
+
+Vector2 Vector2::random()
+{
+	return normal(Vector2{ 1 - 2 * (float)rand() / RAND_MAX, 1 - 2 * (float)rand() / RAND_MAX });
 }

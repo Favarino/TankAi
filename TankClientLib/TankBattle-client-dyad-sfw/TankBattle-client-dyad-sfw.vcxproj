@@ -135,7 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Agent.h" />
-    <ClInclude Include="main.h" />
     <ClInclude Include="TankBattleHeader.h" />
     <ClInclude Include="Vector2.h" />
   </ItemGroup>
