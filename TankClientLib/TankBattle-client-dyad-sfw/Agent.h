@@ -11,7 +11,7 @@ class Agent
 	tankNet::TankBattleCommand tbc;
 	
 	enum Turret {SCAN,AIM,FIRE} turret = SCAN;
-	enum Tank {EVADE, CHASE, WANDER, RETREAT } tank = CHASE;
+	enum Tank {EVADE, CHASE, WANDER, RETREAT } tank = WANDER;
 	size_t aimTarget;
 
 	float randTimer = 0;
@@ -37,7 +37,7 @@ class Agent
 	{
 
 		Vector2 dir = normal(Vector2(current->position[0], current->position[2]) - Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
-
+		float dis = distance(Vector2(current->position[0], current->position[2]), Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
 				float boop = dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2]));
 
 				//std::cout << boop << "\n";
@@ -51,15 +51,16 @@ class Agent
 					tbc.cannonMove = tankNet::CannonMovementOptions::RIGHT;
 				}
 
-				if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) > .01)
+				if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) > .01 && dis < 20)
 				{
 					turret = FIRE;
 				}
+				
 	}
 	void Fire()
 	{
-		//tbc.cannonMove = tankNet::CannonMovementOptions::HALT;
-		//tbc.fireWish = 1;
+		tbc.cannonMove = tankNet::CannonMovementOptions::HALT;
+		tbc.fireWish = 1;
 		turret = SCAN;
 	}
 	
@@ -84,7 +85,10 @@ class Agent
 
 		// determine the forward to the target (which is the next waypoint in the path)
 		Vector2 tf = normal(target - cp);
-
+		if (current->tacticoolData[aimTarget].inSight)
+		{
+			tank = CHASE;
+		}
 		if (dot(cf, tf) > .87f) // if the dot product is close to lining up, move forward
 			tbc.tankMove = tankNet::TankMovementOptions::FWRD;
 		else // otherwise turn right until we line up!
@@ -97,22 +101,15 @@ class Agent
 		float dis = distance(Vector2(current->position[0], current->position[2]), Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
 		Vector2 cp = Vector2::fromXZ(current->position); // current position
 		Vector2 cf = Vector2::fromXZ(current->forward);  // current forward
-		
-		
-
 		target = Vector2::fromXZ(current->tacticoolData[aimTarget].lastKnownPosition);
-		float blueg = (cp.getAngleBetween(target) - cf.angle());
-		
-		std::cout << blueg << "\n";
-		
-		if (blueg > 0)
-		{
-			tbc.tankMove = tankNet::TankMovementOptions::LEFT;
-		}
-		else
-		{
+
+		// determine the forward to the target (which is the next waypoint in the path)
+		Vector2 tf = normal(target - cp);
+
+		if (dot(cf, tf) > .87f) // if the dot product is close to lining up, move forward
+			tbc.tankMove = tankNet::TankMovementOptions::FWRD;
+		else // otherwise turn right until we line up!
 			tbc.tankMove = tankNet::TankMovementOptions::RIGHT;
-		}
 		
 	};
 public:
@@ -130,6 +127,7 @@ public:
 		switch (tank)
 		{
 		case CHASE: Chase(); break;
+		case WANDER: Wander(); break;
 		}
 		return tbc;
 		
