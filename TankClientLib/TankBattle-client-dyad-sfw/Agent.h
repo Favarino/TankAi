@@ -8,17 +8,19 @@
 class Agent
 {
 	tankNet::TankBattleStateData *current;
-	tankNet::TankBattleCommand tbc;
+	tankNet::TankBattleCommand tbc, prevtbc;
 	
 	enum Turret {SCAN,AIM,FIRE} turret = SCAN;
-	enum Tank {EVADE, CHASE, WANDER, RETREAT } tank = WANDER;
+	enum Tank {EVADE, CHASE, WANDER, RETREAT, UNSTICK } tank = WANDER;
 	size_t aimTarget;
 
 	float randTimer = 0;
-
+	float framecount;
+	float stickTimer = 2;
 	// Active target location to pursue
 	Vector2 target;
 
+	//Turn the turret until we see an enemy
 	void Scan()
 	{
 		
@@ -33,37 +35,38 @@ class Agent
 			}
 		}
 	}	
+	//Aim the turret at the enemy
 	void Aim()
 	{
 
 		Vector2 dir = normal(Vector2(current->position[0], current->position[2]) - Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
 		float dis = distance(Vector2(current->position[0], current->position[2]), Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
-				float boop = dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2]));
+		float boop = dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2]));
 
-				//std::cout << boop << "\n";
+		std::cout << dis << "\n";
 
-				if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) > 0)
-				{
-					tbc.cannonMove = tankNet::CannonMovementOptions::LEFT;
-				}
-				if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) < 0)
-				{
-					tbc.cannonMove = tankNet::CannonMovementOptions::RIGHT;
-				}
+		if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) > 0)
+		{
+			tbc.cannonMove = tankNet::CannonMovementOptions::LEFT;
+		}
+		if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) < 0)
+		{
+			tbc.cannonMove = tankNet::CannonMovementOptions::RIGHT;
+		}
 
-				if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) > .01 && dis < 20)
-				{
-					turret = FIRE;
-				}
-				
+		if (dot(perp(dir), Vector2(current->cannonForward[0], current->cannonForward[2])) > .01 && dis < 19)
+		{
+			turret = FIRE;
+		}
 	}
+	//Fire the turret 
 	void Fire()
 	{
 		tbc.cannonMove = tankNet::CannonMovementOptions::HALT;
 		tbc.fireWish = 1;
 		turret = SCAN;
 	}
-	
+	//Wander around until we see an enemy
 	void Wander()
 	{
 		Vector2 dir = normal(Vector2(current->position[0], current->position[2]) - Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
@@ -94,7 +97,7 @@ class Agent
 		else // otherwise turn right until we line up!
 			tbc.tankMove = tankNet::TankMovementOptions::RIGHT;
 	}
-
+	//Move toward the enemy
 	void Chase()
 	{
 		Vector2 dir = normal(Vector2(current->position[0], current->position[2]) - Vector2(current->tacticoolData->lastKnownPosition[0], current->tacticoolData->lastKnownPosition[2]));
@@ -112,10 +115,28 @@ class Agent
 			tbc.tankMove = tankNet::TankMovementOptions::RIGHT;
 		
 	};
+	//If we're stuck on something, get us out
+	void Unstick()
+	{
+		stickTimer -= sfw::getDeltaTime();
+
+		if (stickTimer > 0)
+		{
+			tbc.tankMove = tankNet::TankMovementOptions::LEFT;
+		}
+		else
+		{
+			stickTimer = 2;
+			tank = WANDER;
+		}
+	}
 public:
 	tankNet::TankBattleCommand update(tankNet::TankBattleStateData *state)
 	{
 		
+
+
+		//state machine
 		current = state;
 
 		switch (turret)
@@ -128,7 +149,23 @@ public:
 		{
 		case CHASE: Chase(); break;
 		case WANDER: Wander(); break;
+		case UNSTICK: Unstick(); break;
 		}
+		////avoid shit
+		//prevtbc = tbc;
+		//Vector2 previousposition = Vector2(current->position[0], current->position[2]);
+		//if (prevtbc.tankMove == tbc.tankMove)
+		//{
+		//	framecount++;
+		//}
+		//else
+		//{
+		//	framecount = 0;
+		//}
+		//if (framecount > 8 && distance(previousposition, Vector2(current->position[0], current->position[2])) < 4)
+		//{
+		//	tank = UNSTICK;
+		//}
 		return tbc;
 		
 	    
